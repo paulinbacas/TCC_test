@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./src/css/estilos.css">
+</head>
+<body>
+    <h1>Obtendo a localização do usuário</h1>
+    <p>Para que possamos direcionar o seu atendimento para a unidade SUS mais proxima, sera necessario obtermos a sua localização</p>
+    <button onclick="getMyLocation()">Obter Minha Localização</button>
+    <div id="result">
+        <p id="latd"><span class="label"></span> <span id="latitude"></span></p>
+        <p id="longi"><span class="label"></span> <span id="longitude"></span></p>
+        <p><span id="address"></span></p>
+    </div>
+    <div id="map"></div> 
+
+    <script>
+        function getMyLocation() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(showPosition, showError);
+            } else {
+                updateMessage('Geolocalização não é suportada por este navegador.', '');
+            }
+        }
+
+        function showPosition(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            document.getElementById('latitude').textContent = lat;
+            document.getElementById('longitude').textContent = lng;
+            findAddress(lat, lng);
+            showMap(lat, lng);
+        }
+
+        function showError(error) {
+            updateMessage('Erro ao obter localização: ', error.message);
+        }
+
+        function findAddress(lat, lng) {
+            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=pt-BR`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        updateMessage('Endereço não encontrado.', '');
+                    } else {
+                        const address = buildAddress(data);
+                        document.getElementById('address').innerHTML = `<span class="label">Endereço encontrado:</span><br><br>${address}`;
+                    }
+                })
+                .catch(error => {
+                    updateMessage('Erro ao obter localização: ', error);
+                });
+        }
+
+        function buildAddress(data) {
+            let addressParts = [];
+            if (data.address.road) {
+                let roadWithNumber = data.address.road;
+                if (data.address.house_number) roadWithNumber += `, ${data.address.house_number}`;
+                addressParts.push(roadWithNumber);
+            }
+            if (data.address.suburb) addressParts.push(`Bairro: ${data.address.suburb}`);
+            if (data.address.municipality) addressParts.push(`Cidade: ${data.address.municipality}`);
+            if (data.address.state) addressParts.push(`Estado: ${data.address.state}`);
+            if (data.address.country) addressParts.push(`País: ${data.address.country}`);
+            if (data.address.postcode) addressParts.push(`CEP: ${data.address.postcode}`);
+
+            return addressParts.join('<br>');
+        }
+
+        function updateMessage(message, detail) {
+            document.getElementById('result').innerHTML = `<span class="label">${message}</span>${detail}`;
+        }
+
+        function showMap(lat, lng) {
+            const mapFrame = `<iframe width="46%" height="46%" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://www.openstreetmap.org/export/embed.html?bbox=${lng-0.005}%2C${lat-0.005}%2C${lng+0.005}%2C${lat+0.005}&layer=mapnik&marker=${lat}%2C${lng}"></iframe>`;
+            document.getElementById('map').innerHTML = mapFrame;
+
+        function validbutton(){
+            let procend = false
+            
+            
+        }
+        
+        }
+    </script>
+    <br><a href="formulario.html" id="procend"><button>Prosseguir</button></a><br>
+    <br><a href="index.html">Voltar ao início</a>
+</body>
+</html>
